@@ -11,7 +11,8 @@ November 1, 2016
 
 ### Project Overview
 Self-driving cars are fascinating.  However, the learning curve is steep.  We noticed a lack of simple environments
-for experimenting with the underlying algorithms in pedagogical settings.  We have built one such environment here, which a programmer can run just fine _without_ expensive GPUs.  
+for experimenting with the underlying algorithms in pedagogical settings.  We have built one such environment
+here, which a programmer can run just fine _without_ expensive GPUs.  
 
 Our virtual environment is a derivative of 
 [Matt Harvey's virtual car](https://medium.com/@harvitronix/using-reinforcement-learning-in-python-to-teach-a-virtual-car-to-avoid-obstacles-6e782cc7d4c6#.58wi2s7ct), 
@@ -317,7 +318,8 @@ the recent history.  At that point in time we copy all the weights from the trai
 and repeat.
 
 The target network drives actions in the simulator and updates the recent history.  We keep
-the training network "offline" to prevent thrashing. If you look carefully at our QMax values from before, you'll notice a staircase effect as the values climb over time.  Each step up occurs when the smarter training network 
+the training network "offline" to prevent thrashing. If you look carefully at our QMax values from before,
+you'll notice a staircase effect as the values climb over time.  Each step up occurs when the smarter training network 
 is copied to the target network.  Neat, huh?
 
 ### Benchmark
