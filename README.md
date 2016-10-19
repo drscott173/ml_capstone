@@ -100,7 +100,6 @@ In [6]: ai.g.step(2)
          4.68615124]), False)
 ```
 
-
 ### Performance Metrics
 
 We will evaluate our algorithm by comparing its top score performance in
@@ -680,7 +679,6 @@ our observation that crashes often happen in clusters upon recovery, delivering 
 The "smarter" agent was able to keep many games going much longer, into the thousands of frames.
 The learning was achieved after an initial plateau.  We found that, indeed, the deeper models
 performed better than the shallow, 2-layer models. 
-
 
 ## V. Conclusion
 
