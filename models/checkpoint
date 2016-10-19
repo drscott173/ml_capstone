@@ -1,0 +1,2 @@
+model_checkpoint_path: "narrow-deep-pipe.ckpt"
+all_model_checkpoint_paths: "narrow-deep-pipe.ckpt"
