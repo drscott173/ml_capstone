@@ -110,8 +110,6 @@ before a crash.  We need to do (much) better than random chance.
 
 ### Training Metrics
 
-![QMax](figures/qmax.png)
-
 As we seek to beat random chance and improve our performance, we'll also
 want to track how well our algorithm is progressing.  We will be tracking
 QMax as described in the Deep Q Learning paper.
@@ -154,7 +152,12 @@ Starting TensorBoard 23 on port 6006
 ```
 Launch your browser and navigate to http://0.0.00:6006.  You'll see three numbers we're tracking, loss, qmax and
 score. Loss represents the amount of error in a random sample of historical frames, taken every learning
-cycle.  QMax and Score are tracked over time, too.  Click to reveal or hide plots.
+cycle.  QMax and Score are tracked over time, too.  Click to reveal or hide plots.  One example of the QMax
+plot is shown below, showing how are agent improves over 500k iterations.  The staircase effect
+is caused by jumps in capability whenever the agent would copy its training network to the target,
+live network.
+
+![QMax](figures/qmax.png)
 
 If you're curious, click on the "histograms" tab to see our network weights and biases change over time
 as shown below. "q_train" refers to the training network that feeds on the memory of the last
@@ -346,15 +349,50 @@ that the network failed to learn much in the first million iterations.  The high
 reward values made learning easier, as the reward "signal" stood out from the Gaussian noise embedded within
 the network.  With smaller reward values, the Gaussian noise hid the signal and the network floundered.
 
+However, one of the rewards was confounding our efforts.  The negative
+reward of -500 for a crash was too severe, so we scaled it back to -100
+so that our reward mean was closer to 0.
+
+#### Comments on reward normalization
+
+Here's the problem we discovered. During backpropagation
+that adjusts weights in the network, we look to minimize loss.  Our loss was the sum of squares
+between predicted Q(s,a) and target Q(s,a) values.  The reward for most states
+falls in the 0-40 range given the maximum distance a sonar travels without
+hitting an object.  Further, this range had a mean of 20.  Our network begins with
+output values that are close to zero with a bit of white Gaussian noise.  That means
+our initial loss is typically 400-1600.  The network would adjust weights to
+reduce this number closer to 0. 
+
+Now assume we're near an optimal loss, then a crash happens, perhaps due to the cat
+approaching us from behind.  The crash introduces a loss of 250,000, more than 100x
+worse that what we typically see.  This spike sends a shockwave through the neural network,
+causing weights to take a larger step down a gradient curve to account for the
+error.  However, this large step can have a deleterious effect on other outputs,
+skipping over local and global minima, pushing
+us much further from optimum. The network slowly recovers and starts fine-tuning the network
+to handle the most common case.  Then, a crash happens, and we kick the
+network into another tail spin.
+
+This would repeat ad-nauseum.  We'd see the network approach a minimal loss, experience
+a spike, and the loss would swing wildly.  
+
+Mathematically speaking, our original problem space has an unusually large
+bias towards one parameter, creating a non-uniform shape that is difficult to traverse
+with gradient descent.  The large bias creates significant, numerical cliffs in the
+gradient space.  Its as though we were traversing a mountain, get near a peak, then
+slipped off the edge and fell into an abyss, only to slowly climb up the hill again
+and repeat the process.  Not fun.
+
+Reducing the magnitude of the reward lowers the bias, softens the cliffs,
+and makes our network less prone to these oscillations.  The lesson learned here is
+that we need rewards to stand out from the white Gaussian noise, but irregular or dramatic
+shifts can wreak havoc on gradient descent.  We call this _reward normalization_.
+
 ### Implementation
 
-Our implementation consists of essentially two files.  
-
-```carmunk.py``` is a port of the original CarMunk car driving
-game so that it works properly with PyMunk 5.0 and Python 2.7.  We made
-one important change -- the reward for a crash is now -100 vs. -500 in the original
-design.  More on that later. We observed broad oscillations in the weights and biases with the -500
-value, causing very spikey loss results. 
+Our implementation consists of essentially two files.  ``carmunk.py``` is a port of the original CarMunk
+car driving game so that it works properly with PyMunk 5.0 and Python 2.7.  
 
 ```learning.py``` is an implementation of Deep Q reinforcement learning using Tensorflow
 for building our neural network.  We say our implemenation is "without the deep," as our network
@@ -473,42 +511,6 @@ Epoch Mean score 46.5774647887
 ```
 
 As you can see, the top score is slowly but gradually improving!  
-
-#### A note on reward "normalization"
-
-Here's the problem we discovered in the original ```carmunk``` game.  During backpropagation
-that adjusts weights in the network, we look to minimize loss.  Our loss was the sum of squares
-between predicted Q(s,a) and target Q(s,a) values.  The reward for most states
-falls in the 0-40 range given the maximum distance a sonar travels without
-hitting an object.  Further, this range had a mean of 20.  Our network begins with
-output values that are close to zero with a bit of white Gaussian noise.  That means
-our initial loss is typically 400-1200.  The network would adjust weights to
-reduce this number closer to 0. 
-
-Now assume we're near an optimal loss, then a crash happens, perhaps due to the cat
-approaching us from behind.  The crash introduces a loss of 25,000, more than 100x
-worse that what we typically see.  This spike sends a shockwave through the neural network,
-causing weights to take a larger step down a gradient curve to account for the
-error.  However, this large step can have a deleterious effect on other outputs,
-skipping over local and global minima, pushing
-us much further from optimum. The network slowly recovers and starts fine-tuning the network
-to handle the most common case.  Then, a crash happens, and we kick the
-network into another tail spin.
-
-This would repeat ad-nauseum.  We'd see the network approach a minimal loss, experience
-a spike, and the loss would swing wildly.  
-
-Mathematically speaking, our original problem space has an unusually large
-bias towards one parameter, creating a non-uniform shape that is difficult to traverse
-with gradient descent.  The large bias creates significant, numerical cliffs in the
-gradient space.  Its as though we were traversing a mountain, get near a peak, then
-slipped off the edge and fell into an abyss, only to slowly climb up the hill again
-and repeat the process.  Not fun.
-
-Reducing the magnitude of the reward lowers the bias, softens the cliffs,
-and makes our network less prone to these oscillations.  The lesson learned here is
-that we need rewards to stand out from the white Gaussian noise, but irregular or dramatic
-shifts can wreak havoc on gradient descent.  We call this _reward normalization_.
 
 #### Tensorflow 101
 
