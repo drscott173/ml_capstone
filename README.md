@@ -214,6 +214,7 @@ algorithm figures out to stay closer to the middle, to turn away from walls, and
 getting close.
 
 ### Exploratory Visualization
+
 ![PyGame Racer v1](http://i.makeagif.com/media/10-12-2016/BksdP7.gif)
 
 Here we see an animation of the environment where actions are chosen
@@ -252,6 +253,7 @@ In [11]:
 ```
 
 ### Algorithms and Techniques
+
 ![Reinforcement Learning](figures/rel.png)
 
 This toy car scenario can be formalized by the diagram above.  We have an agent, the car, at the top of the diagram.  At a point
@@ -319,7 +321,6 @@ The target network drives actions in the simulator and updates the recent histor
 the training network "offline" to prevent thrashing. If you look carefully at our QMax values from before, you'll notice a staircase effect as the values climb over time.  Each step up occurs when the smarter training network 
 is copied to the target network.  Neat, huh?
 
-
 ### Benchmark
 
 We want to ensure that our algorithm is doing better than random chance.  We seed all
@@ -353,7 +354,7 @@ However, one of the rewards was confounding our efforts.  The negative
 reward of -500 for a crash was too severe, so we scaled it back to -100
 so that our reward mean was closer to 0.
 
-#### Comments on reward normalization
+#### Reward normalization
 
 Here's the problem we discovered. During backpropagation
 that adjusts weights in the network, we look to minimize loss.  Our loss was the sum of squares
@@ -391,7 +392,9 @@ shifts can wreak havoc on gradient descent.  We call this _reward normalization_
 
 ### Implementation
 
-Our implementation consists of essentially two files.  ``carmunk.py``` is a port of the original CarMunk
+Our implementation consists of essentially two files.  
+
+```carmunk.py``` is a port of the original CarMunk
 car driving game so that it works properly with PyMunk 5.0 and Python 2.7.  
 
 ```learning.py``` is an implementation of Deep Q reinforcement learning using Tensorflow
@@ -695,8 +698,8 @@ I can see now why pedagogical environments are rare.  Tensorflow and Deep Q Lear
 Worse, the deep convolutional networks today require expensive, custom hardware to achieve a modicum
 of performance.  Current offerings are limited
 in that the latest CUDA software, Docker containers, Tensorflow libraries, Python libraries, and APIs are in flux
-and often incompatible. Still, we were able to achieve one environment that I hope will help others learn about
-these powerful tools!
+and often incompatible. Still, we were able to build one environment that I hope others
+get to enjoy.
 
 As for the toy example, several hours playing with the model cause me to scream for better
 sensors.  The simple, "pinhole" views of our surroundings are woefully insufficient for
